@@ -9,6 +9,7 @@ import java.io.*;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
  * The type Default collection writer.
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class DefaultCollectionWriter extends AbstractWrite {
 
     @Override
-    public byte[] writeCollection(Collection<DatabaseRecord> collection) throws IOException {
+    public byte[] writeCollection(Collection<DatabaseRecord> collection, Consumer<Piece> consumer) throws IOException {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         DataOutputStream dataStream = new DataOutputStream(byteStream);
 
@@ -30,6 +31,8 @@ public class DefaultCollectionWriter extends AbstractWrite {
 
         // Serialize each document
         for (Piece doc : documents) {
+            consumer.accept(doc);
+
             byte[] docBytes = this.serializeDocument(doc);
             dataStream.writeInt(docBytes.length);
             dataStream.write(docBytes);

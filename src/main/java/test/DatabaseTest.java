@@ -14,12 +14,7 @@ public class DatabaseTest {
         AbstractDatabase database = new DefaultDatabase(Paths.get("./database_test/"));
         database.load();
 
-        Collection<?> collection = database.getCollection("players");
-        collection.singlePieceAsync(Filters.eq("test", "test"), (piece, state, exception) -> {
-
-        });
-
-        database.save();
+        System.out.println(database.getCollection("players").collect());
     }
 
     public static void test1() {

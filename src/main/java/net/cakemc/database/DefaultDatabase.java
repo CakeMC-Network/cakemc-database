@@ -23,6 +23,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DefaultDatabase extends AbstractDatabase {
 
     private static final String FILE_FORMAT = "%s.db_bin";
+    private static final int DAY_IN_MILLIS = 86400000;
 
     private final Map<String, Collection<DatabaseRecord>> collectionMap;
 
@@ -75,13 +76,27 @@ public class DefaultDatabase extends AbstractDatabase {
     @Override
     public void save() {
         for (Map.Entry<String, Collection<DatabaseRecord>> entry : collectionMap.entrySet()) {
-            try {
-                NioFile nioFile = (NioFile) databaseFolder.getFile(FILE_FORMAT.formatted(entry.getKey()));
-                nioFile.getMemoryFile().setData(this.collectionWriter.writeCollection(entry.getValue()));
-                nioFile.write();
-            } catch (Throwable e) {
-                throw new RuntimeException(e);
-            }
+            AbstractDatabase.VISUAL_EXECUTOR.execute(() -> {
+                try {
+                    NioFile nioFile = (NioFile) databaseFolder.getFile(FILE_FORMAT.formatted(entry.getKey()));
+                    nioFile.getMemoryFile().setData(this.collectionWriter.writeCollection(entry.getValue(), piece -> {
+                        if (piece.contains("_auto_delete") && piece.contains("_created_at") && piece.getInt("_auto_delete") != -1) {
+                            int days = piece.getInt("_auto_delete");
+                            long createdAt = piece.getLong("_created_at");
+
+                            long timeDif = System.currentTimeMillis() - createdAt;
+
+                            if (timeDif >= ((long) DAY_IN_MILLIS * days))
+                                entry.getValue().deleteOnePiece(piece);
+                        }
+
+                    }));
+                    nioFile.write();
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
         }
     }
 

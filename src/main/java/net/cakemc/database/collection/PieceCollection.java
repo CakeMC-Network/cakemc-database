@@ -10,9 +10,7 @@ import net.cakemc.database.callbacks.PieceAsyncCallBack;
 import net.cakemc.database.callbacks.PieceAsyncMultiCallBack;
 import net.cakemc.database.filter.PieceFilter;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
@@ -213,7 +211,11 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
         int index = this.elements.size() + 1;
         long id = nextFreeId();
 
-        return new Piece(index, id, new HashMap<>());
+        Map<String, Object> data = new HashMap<>();
+        data.put("_created_at", System.currentTimeMillis());
+        data.put("_auto_delete", -1);
+
+        return new Piece(index, id, data);
     }
 
     private long nextFreeId() {
