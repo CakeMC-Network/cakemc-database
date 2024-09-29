@@ -15,7 +15,12 @@ public class Filters {
      * @return the piece filter
      */
     public static PieceFilter eq(String key, Object value) {
-        return piece -> piece.getElements().get(key).equals(value);
+        return piece -> {
+            if (piece.getElements().get(key) == null)
+                return false;
+
+            return piece.getElements().get(key).equals(value);
+        };
     }
 
     /**
