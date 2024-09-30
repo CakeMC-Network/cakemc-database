@@ -76,7 +76,7 @@ public class DefaultDatabase extends AbstractDatabase {
     @Override
     public void save() {
         for (Map.Entry<String, Collection<DatabaseRecord>> entry : collectionMap.entrySet()) {
-            AbstractDatabase.VISUAL_EXECUTOR.execute(() -> {
+            //AbstractDatabase.EXECUTOR.execute(() -> {
                 try {
                     NioFile nioFile = (NioFile) databaseFolder.getFile(FILE_FORMAT.formatted(entry.getKey()));
                     nioFile.getMemoryFile().setData(this.collectionWriter.writeCollection(entry.getValue(), piece -> {
@@ -95,7 +95,7 @@ public class DefaultDatabase extends AbstractDatabase {
                 } catch (Throwable e) {
                     throw new RuntimeException(e);
                 }
-            });
+            //});
 
         }
     }

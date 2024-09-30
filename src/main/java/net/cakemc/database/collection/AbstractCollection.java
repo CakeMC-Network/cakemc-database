@@ -218,4 +218,12 @@ public abstract class AbstractCollection<T> implements Collection<T> {
         return name;
     }
 
+    @Override
+    public String toString() {
+        return "AbstractCollection{" +
+                "elements=" + elements +
+                ", id=" + id +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

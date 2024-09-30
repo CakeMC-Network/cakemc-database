@@ -20,6 +20,7 @@ public abstract class AbstractDatabase {
     /**
      * The constant VISUAL_EXECUTOR.
      */
+    public static final ExecutorService EXECUTOR = Executors.newCachedThreadPool();
     public static final ExecutorService VISUAL_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
 
     /**
