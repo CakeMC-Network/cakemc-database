@@ -48,7 +48,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
                         .filter(filter::matches)
                         .toList()));
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             callBack.acceptException(exception);
@@ -71,7 +71,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
 
                 documentCallBack.acceptFound(element);
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             documentCallBack.acceptException(exception);
@@ -105,7 +105,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
                 } else
                     listener.accept(DatabaseListener.State.FAILED, null);
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -124,7 +124,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
 
                 // todo update fields in filter
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -153,7 +153,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
                 else
                     listener.accept(DatabaseListener.State.FAILED, null);
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -171,7 +171,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
 
                 listener.success();
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -191,7 +191,7 @@ public abstract class AbstractCollection<T> implements Collection<T> {
                 this.elements.add(element);
                 listener.success();
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);

@@ -43,7 +43,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
                         .map(databaseRecord -> (Piece) databaseRecord)
                         .toList()));
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             callBack.acceptException(exception);
@@ -67,7 +67,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
 
                 documentCallBack.acceptFound(element);
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             documentCallBack.acceptException(exception);
@@ -103,7 +103,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
                 } else
                     listener.accept(DatabaseListener.State.FAILED, null);
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -122,7 +122,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
 
                 // todo update fields in filter
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -152,7 +152,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
                 else
                     listener.accept(DatabaseListener.State.FAILED, null);
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -170,7 +170,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
 
                 listener.success();
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
@@ -190,7 +190,7 @@ public class PieceCollection extends AbstractCollection<DatabaseRecord> {
                 this.elements.add(element);
                 listener.success();
 
-            }, AbstractDatabase.VISUAL_EXECUTOR);
+            }, AbstractDatabase.EXECUTOR);
             completableFuture.get();
         } catch (InterruptedException | ExecutionException exception) {
             listener.exception(exception);
