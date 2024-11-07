@@ -18,7 +18,7 @@ import java.util.concurrent.ThreadLocalRandom
 /**
  * The type Default database.
  */
-class DefaultDatabase(folder: Path) : AbstractDatabase() {
+open class DefaultDatabase(folder: Path) : AbstractDatabase() {
     private val collectionMap: MutableMap<String?, Collection<DatabaseRecord?>> =
         ConcurrentHashMap()
 
