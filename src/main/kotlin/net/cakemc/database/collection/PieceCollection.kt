@@ -65,8 +65,8 @@ class PieceCollection(
         return cursorSupplier.create(matchedElements)
     }
 
-    override fun singlePiece(supplier: PieceFilter): Piece {
-        return elements.filterIsInstance<Piece>().find { supplier.matches(it) }!!
+    override fun singlePiece(supplier: PieceFilter): Piece? {
+        return elements.filterIsInstance<Piece>().find { supplier.matches(it) }
     }
 
     override fun replaceOnePiece(filter: PieceFilter, element: Piece) {

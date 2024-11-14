@@ -28,6 +28,7 @@ object Filters {
      * @param key the key
      * @return the piece filter
      */
+    @JvmStatic
     fun contains(key: String): PieceFilter {
         return PieceFilter { piece: Piece -> piece.contains(key) }
     }
@@ -38,6 +39,7 @@ object Filters {
      * @param id the id
      * @return the piece filter
      */
+    @JvmStatic
     fun id(id: Long): PieceFilter {
         return PieceFilter { piece: Piece -> piece.id == id }
     }
@@ -48,6 +50,7 @@ object Filters {
      * @param index the index
      * @return the piece filter
      */
+    @JvmStatic
     fun index(index: Int): PieceFilter {
         return PieceFilter { piece: Piece -> piece.index == index }
     }
@@ -60,6 +63,7 @@ object Filters {
      * @param consumer the consumer
      * @return the piece filter
     </T> */
+    @JvmStatic
     fun <T> custom(key: String, consumer: ConditionalConsumer<T?>): PieceFilter {
         return PieceFilter { piece: Piece ->
             if (!piece.contains(key)) return@PieceFilter false

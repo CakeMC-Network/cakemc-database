@@ -65,7 +65,7 @@ interface Collection<T> {
      * @param supplier the supplier
      * @return the piece
      */
-    fun singlePiece(supplier: PieceFilter): Piece
+    fun singlePiece(supplier: PieceFilter): Piece?
 
     /**
      * Multi cursor.
@@ -82,7 +82,7 @@ interface Collection<T> {
      * @param supplier the supplier
      * @return the t
      */
-    fun single(supplier: Filter<T>): T
+    fun single(supplier: Filter<T>): T?
 
     /**
      * Replace one piece.
