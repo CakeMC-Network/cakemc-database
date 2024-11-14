@@ -1,240 +1,188 @@
-package net.cakemc.database.collection;
+package net.cakemc.database.collection
 
-import net.cakemc.database.AbstractDatabase;
-import net.cakemc.database.api.DatabaseRecord;
-import net.cakemc.database.api.Piece;
-import net.cakemc.database.cursor.Cursor;
-import net.cakemc.database.cursor.PieceCursorSupplier;
-import net.cakemc.database.callbacks.DatabaseListener;
-import net.cakemc.database.callbacks.PieceAsyncCallBack;
-import net.cakemc.database.callbacks.PieceAsyncMultiCallBack;
-import net.cakemc.database.filter.PieceFilter;
-
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
+import net.cakemc.database.AbstractDatabase
+import net.cakemc.database.api.DatabaseRecord
+import net.cakemc.database.api.Piece
+import net.cakemc.database.callbacks.DatabaseListener
+import net.cakemc.database.callbacks.PieceAsyncCallBack
+import net.cakemc.database.callbacks.PieceAsyncMultiCallBack
+import net.cakemc.database.cursor.Cursor
+import net.cakemc.database.cursor.PieceCursorSupplier
+import net.cakemc.database.filter.PieceFilter
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ThreadLocalRandom
 
 /**
- * The type Piece collection.
+ * Piece collection implementation.
  */
-public class PieceCollection extends AbstractCollection<DatabaseRecord> {
+class PieceCollection(
+    elements: MutableList<DatabaseRecord>,
+    id: Long,
+    name: String
+) : AbstractCollection<DatabaseRecord>(elements, id, name) {
 
-
-    /**
-     * Instantiates a new Piece collection.
-     *
-     * @param elements the elements
-     * @param id       the id
-     * @param name     the name
-     */
-    public PieceCollection(List<DatabaseRecord> elements, long id, String name) {
-        super(elements, id, name);
-    }
-
-
-    @Override
-    public void multiPieceAsync(PieceFilter filter, PieceCursorSupplier cursorSupplier, PieceAsyncMultiCallBack callBack) {
+    override fun multiPieceAsync(filter: PieceFilter, cursorSupplier: PieceCursorSupplier, callBack: PieceAsyncMultiCallBack) {
         try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync({
+                val matchedElements = elements
+                    .filter { filter.matches(it as Piece) }
+                    .map { it as Piece }
 
-                callBack.acceptFound(cursorSupplier.create(this.elements.stream()
-                        .filter(databaseRecord -> filter.matches((Piece) databaseRecord))
-                        .map(databaseRecord -> (Piece) databaseRecord)
-                        .toList()));
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            callBack.acceptException(exception);
+                callBack.acceptFound(cursorSupplier.create(matchedElements))
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            callBack.acceptException(exception)
+        } catch (exception: ExecutionException) {
+            callBack.acceptException(exception)
         }
     }
 
-    @Override
-    public void singlePieceAsync(PieceFilter filter, PieceAsyncCallBack documentCallBack) {
+    override fun singlePieceAsync(supplier: PieceFilter, documentCallBack: PieceAsyncCallBack) {
         try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
-
-                Piece element = (Piece) elements.stream()
-                        .filter(databaseRecord -> filter.matches((Piece) databaseRecord))
-                        .findFirst()
-                        .orElse(null);
+            CompletableFuture.runAsync({
+                val element = elements
+                    .filterIsInstance<Piece>()
+                    .find { supplier.matches(it) }
 
                 if (element == null) {
-                    documentCallBack.acceptNotFound();
-                    return;
+                    documentCallBack.acceptNotFound()
+                } else {
+                    documentCallBack.acceptFound(element)
                 }
-
-                documentCallBack.acceptFound(element);
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            documentCallBack.acceptException(exception);
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            documentCallBack.acceptException(exception)
+        } catch (exception: ExecutionException) {
+            documentCallBack.acceptException(exception)
         }
     }
 
-    @Override
-    public Cursor<Piece> multiPiece(PieceFilter filter, PieceCursorSupplier cursorSupplier) {
-        return cursorSupplier.create(elements.stream()
-                .filter(databaseRecord -> filter.matches((Piece) databaseRecord))
-                .map(databaseRecord -> (Piece) databaseRecord).toList());
+    override fun multiPiece(filter: PieceFilter, cursorSupplier: PieceCursorSupplier): Cursor<Piece> {
+        val matchedElements = elements
+            .filterIsInstance<Piece>()
+            .filter { filter.matches(it) }
+        return cursorSupplier.create(matchedElements)
     }
 
-    @Override
-    public Piece singlePiece(PieceFilter filter) {
-        return (Piece) elements.stream().filter(databaseRecord -> filter.matches((Piece) databaseRecord)).findFirst().orElse(null);
+    override fun singlePiece(supplier: PieceFilter): Piece {
+        return elements.filterIsInstance<Piece>().find { supplier.matches(it) }!!
     }
 
-    @Override
-    public void replaceOnePiece(PieceFilter filter, Piece element) {
-        elements.removeIf(databaseRecord -> filter.matches((Piece) databaseRecord));
-        elements.add(element);
+    override fun replaceOnePiece(filter: PieceFilter, element: Piece) {
+        elements.removeIf { filter.matches(it as Piece) }
+        elements.add(element)
     }
 
-    @Override
-    public void replaceOnePieceAsync(PieceFilter filter, Piece element, DatabaseListener listener) {
+    override fun replaceOnePieceAsync(filter: PieceFilter, element: Piece, listener: DatabaseListener) {
         try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
-
-                if (elements.removeIf(databaseRecord -> filter.matches((Piece) databaseRecord))) {
-                    elements.add(element);
-                    listener.success();
-                } else
-                    listener.accept(DatabaseListener.State.FAILED, null);
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            listener.exception(exception);
-        }
-    }
-
-    @Override
-    public void updateOnePiece(PieceFilter filter, Piece element) {
-        // todo update fields in filter
-    }
-
-    @Override
-    public void updateOnePieceAsync(PieceFilter filter, Piece element, DatabaseListener listener) {
-        try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
-
-                // todo update fields in filter
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            listener.exception(exception);
-        }
-    }
-
-    @Override
-    public void deleteOnePiece(Piece element) {
-        this.elements.remove(element);
-    }
-
-    @Override
-    public void deleteManyPiece(Piece... element) {
-        for (Piece piece : element) {
-            this.elements.remove(piece);
-        }
-
-    }
-
-    @Override
-    public void deleteOnePieceAsync(Piece element, DatabaseListener listener) {
-        try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
-
-                if (elements.remove(element))
-                    listener.success();
-                else
-                    listener.accept(DatabaseListener.State.FAILED, null);
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            listener.exception(exception);
-        }
-    }
-
-    @Override
-    public void deleteManyPieceAsync(DatabaseListener listener, Piece... element) {
-        try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
-
-                for (DatabaseRecord current : element) {
-                    elements.remove(current);
+            CompletableFuture.runAsync({
+                if (elements.removeIf { filter.matches(it as Piece) }) {
+                    elements.add(element)
+                    listener.success()
+                } else {
+                    listener.accept(DatabaseListener.State.FAILED, null)
                 }
-
-                listener.success();
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            listener.exception(exception);
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            listener.exception(exception)
+        } catch (exception: ExecutionException) {
+            listener.exception(exception)
         }
     }
 
-    @Override
-    public void insertOnePiece(Piece element) {
-        this.elements.add(element);
+    override fun updateOnePiece(filter: PieceFilter, element: Piece) {
+        // TODO: Implement field update based on filter
     }
 
-    @Override
-    public void insertOnePieceAsync(Piece element, DatabaseListener listener) {
+    override fun updateOnePieceAsync(filter: PieceFilter, element: Piece, listener: DatabaseListener) {
         try {
-            CompletableFuture<Void> completableFuture = CompletableFuture.runAsync(() -> {
-
-                this.elements.add(element);
-                listener.success();
-
-            }, AbstractDatabase.EXECUTOR);
-            completableFuture.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            listener.exception(exception);
+            CompletableFuture.runAsync({
+                // TODO: Implement field update based on filter
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            listener.exception(exception)
+        } catch (exception: ExecutionException) {
+            listener.exception(exception)
         }
     }
 
-    private <T> Piece pieceCast(T element) {
-        return (Piece) element;
+    override fun deleteOnePiece(element: Piece) {
+        elements.remove(element)
     }
 
-    @Override
-    public DatabaseRecord defineOne() {
-        throw new UnsupportedOperationException("no implemented!");
+    override fun deleteManyPiece(vararg element: Piece) {
+        element.forEach { elements.remove(it) }
     }
 
-    @Override
-    public Piece defineOnePeace() {
-        int index = this.elements.size() + 1;
-        long id = nextFreeId();
-
-        Map<String, Object> data = new HashMap<>();
-        data.put("_created_at", System.currentTimeMillis());
-        data.put("_auto_delete", -1);
-
-        return new Piece(index, id, data);
-    }
-
-    private long nextFreeId() {
-        long current = ThreadLocalRandom.current().nextLong();
-
-        if (this.elements.stream()
-                .anyMatch(databaseRecord -> databaseRecord.id == current))
-
-            return nextFreeId();
-        return current;
-    }
-
-    @Override
-    public List<Piece> collect() {
-        List<Piece> pieces = new ArrayList<>();
-        for (DatabaseRecord element : this.elements) {
-            if (element instanceof Piece piece)
-                pieces.add(piece);
+    override fun deleteOnePieceAsync(element: Piece, listener: DatabaseListener) {
+        try {
+            CompletableFuture.runAsync({
+                if (elements.remove(element)) {
+                    listener.success()
+                } else {
+                    listener.accept(DatabaseListener.State.FAILED, null)
+                }
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            listener.exception(exception)
+        } catch (exception: ExecutionException) {
+            listener.exception(exception)
         }
-        return pieces;
+    }
+
+    override fun deleteManyPieceAsync(listener: DatabaseListener, vararg element: Piece) {
+        try {
+            CompletableFuture.runAsync({
+                element.forEach { elements.remove(it) }
+                listener.success()
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            listener.exception(exception)
+        } catch (exception: ExecutionException) {
+            listener.exception(exception)
+        }
+    }
+
+    override fun insertOnePiece(element: Piece) {
+        elements.add(element)
+    }
+
+    override fun insertOnePieceAsync(element: Piece, listener: DatabaseListener) {
+        try {
+            CompletableFuture.runAsync({
+                elements.add(element)
+                listener.success()
+            }, AbstractDatabase.EXECUTOR).get()
+        } catch (exception: InterruptedException) {
+            listener.exception(exception)
+        } catch (exception: ExecutionException) {
+            listener.exception(exception)
+        }
+    }
+
+    override fun defineOne(): DatabaseRecord {
+        throw UnsupportedOperationException("Not implemented!")
+    }
+
+    override fun defineOnePeace(): Piece {
+        val index = elements.size + 1
+        val id = nextFreeId()
+
+        val data = mutableMapOf<String, Any>(
+            "_created_at" to System.currentTimeMillis(),
+            "_auto_delete" to -1
+        )
+
+        return Piece(index, id, data)
+    }
+
+    private fun nextFreeId(): Long {
+        val current = ThreadLocalRandom.current().nextLong()
+        return if (elements.any { it.id == current }) nextFreeId() else current
+    }
+
+    override fun collect(): List<Piece> {
+        return elements.filterIsInstance<Piece>()
     }
 }

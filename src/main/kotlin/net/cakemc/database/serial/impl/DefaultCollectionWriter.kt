@@ -1,117 +1,103 @@
-package net.cakemc.database.serial.impl;
+package net.cakemc.database.serial.impl
 
-import net.cakemc.database.api.DatabaseRecord;
-import net.cakemc.database.api.Piece;
-import net.cakemc.database.collection.Collection;
-import net.cakemc.database.serial.AbstractWrite;
-
-import java.io.*;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Consumer;
+import net.cakemc.database.api.DatabaseRecord
+import net.cakemc.database.api.Piece
+import net.cakemc.database.collection.Collection
+import net.cakemc.database.serial.AbstractWrite
+import java.io.*
+import java.util.*
+import java.util.function.Consumer
 
 /**
- * The type Default collection writer.
+ * Default collection writer.
  */
-public class DefaultCollectionWriter extends AbstractWrite {
+class DefaultCollectionWriter : AbstractWrite() {
 
-    @Override
-    public byte[] writeCollection(Collection<DatabaseRecord> collection, Consumer<Piece> consumer) throws IOException {
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        DataOutputStream dataStream = new DataOutputStream(byteStream);
+    override fun writeCollection(collection: Collection<DatabaseRecord>, consumer: Consumer<Piece>): ByteArray {
+        val byteStream = ByteArrayOutputStream()
+        val dataStream = DataOutputStream(byteStream)
 
-        List<Piece> documents = collection.collect();
+        val documents = collection.collect()
 
-        // Write number of documents
-        dataStream.writeLong(collection.getId());
-        dataStream.writeUTF(collection.getName());
+        // Write collection details
+        dataStream.writeLong(collection.id)
+        dataStream.writeUTF(collection.name)
 
-        dataStream.writeInt(documents.size());
+        dataStream.writeInt(documents.size)
 
         // Serialize each document
-        for (Piece doc : documents) {
-            consumer.accept(doc);
+        for (doc in documents) {
+            consumer.accept(doc)
 
-            byte[] docBytes = this.serializeDocument(doc);
-            dataStream.writeInt(docBytes.length);
-            dataStream.write(docBytes);
+            val docBytes = serializeDocument(doc)
+            dataStream.writeInt(docBytes.size)
+            dataStream.write(docBytes)
         }
 
-        dataStream.flush();
-        return byteStream.toByteArray();
+        dataStream.flush()
+        return byteStream.toByteArray()
     }
 
     /**
-     * Serialize document byte [ ].
+     * Serialize document to byte array.
      *
      * @param piece the piece
-     * @return the byte [ ]
-     * @throws IOException the io exception
+     * @return the byte array
+     * @throws IOException if an I/O error occurs
      */
-    public byte[] serializeDocument(Piece piece) throws IOException {
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        DataOutputStream dataStream = new DataOutputStream(byteStream);
+    @Throws(IOException::class)
+    fun serializeDocument(piece: Piece): ByteArray {
+        val byteStream = ByteArrayOutputStream()
+        val dataStream = DataOutputStream(byteStream)
 
-        dataStream.writeLong(piece.id);
-        dataStream.writeInt(piece.index);
+        dataStream.writeLong(piece.id)
+        dataStream.writeInt(piece.index)
 
-        dataStream.writeInt(piece.size());
+        dataStream.writeInt(piece.size())
 
-        for (Map.Entry<String, Object> entry : piece.getElements().entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
+        for ((key, value) in piece.elements) {
+            if (value == null) continue
 
-            if (value == null)
-                continue;
+            dataStream.writeUTF(key)
 
-            dataStream.writeUTF(key);
-
-            switch (value) {
-                case String s -> {
-                    dataStream.writeByte(1);
-
-                    dataStream.writeUTF(s);
+            when (value) {
+                is String -> {
+                    dataStream.writeByte(1)
+                    dataStream.writeUTF(value)
                 }
-                case Integer i -> {
-                    dataStream.writeByte(2);
-
-                    dataStream.writeInt(i);
+                is Int -> {
+                    dataStream.writeByte(2)
+                    dataStream.writeInt(value)
                 }
-                case Long l -> {
-                    dataStream.writeByte(3);
-
-                    dataStream.writeLong(l);
+                is Long -> {
+                    dataStream.writeByte(3)
+                    dataStream.writeLong(value)
                 }
-                case Double v -> {
-                    dataStream.writeByte(4);
-
-                    dataStream.writeDouble(v);
+                is Double -> {
+                    dataStream.writeByte(4)
+                    dataStream.writeDouble(value)
                 }
-                case Boolean b -> {
-                    dataStream.writeByte(5);
-                    dataStream.writeBoolean(b);
+                is Boolean -> {
+                    dataStream.writeByte(5)
+                    dataStream.writeBoolean(value)
                 }
-                case UUID uuid -> {
-                    dataStream.writeByte(6);
-                    dataStream.writeUTF(uuid.toString());
+                is UUID -> {
+                    dataStream.writeByte(6)
+                    dataStream.writeUTF(value.toString())
                 }
-                case Serializable serializable -> {
-                    dataStream.writeByte(7);
-                    ByteArrayOutputStream objectStream = new ByteArrayOutputStream();
-                    ObjectOutputStream objOutStream = new ObjectOutputStream(objectStream);
-                    objOutStream.writeObject(value);
-                    objOutStream.flush();
-                    byte[] objectBytes = objectStream.toByteArray();
-                    dataStream.writeInt(objectBytes.length);
-                    dataStream.write(objectBytes);
+                is Serializable -> {
+                    dataStream.writeByte(7)
+                    val objectStream = ByteArrayOutputStream()
+                    ObjectOutputStream(objectStream).use { it.writeObject(value) }
+                    val objectBytes = objectStream.toByteArray()
+                    dataStream.writeInt(objectBytes.size)
+                    dataStream.write(objectBytes)
                 }
-                case null, default -> throw new IOException("Unsupported data type: " + value.getClass().getSimpleName());
+                else -> throw IOException("Unsupported data type: ${value::class.simpleName}")
             }
         }
 
-        dataStream.flush();
-        return byteStream.toByteArray();
+        dataStream.flush()
+        return byteStream.toByteArray()
     }
-
 }

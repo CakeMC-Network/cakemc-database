@@ -1,109 +1,82 @@
-package net.cakemc.database.serial.impl;
+package net.cakemc.database.serial.impl
 
-import net.cakemc.database.api.DatabaseRecord;
-import net.cakemc.database.api.Piece;
-import net.cakemc.database.collection.Collection;
-import net.cakemc.database.collection.PieceCollection;
-import net.cakemc.database.serial.AbstractRead;
-
-import java.io.ByteArrayInputStream;
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
-import java.util.UUID;
+import net.cakemc.database.api.DatabaseRecord
+import net.cakemc.database.api.Piece
+import net.cakemc.database.collection.Collection
+import net.cakemc.database.collection.PieceCollection
+import net.cakemc.database.serial.AbstractRead
+import java.io.*
+import java.util.*
 
 /**
- * The type Default collection reader.
+ * Default collection reader.
  */
-public class DefaultCollectionReader extends AbstractRead {
+class DefaultCollectionReader : AbstractRead() {
 
-    @Override
-    public Collection<DatabaseRecord> read(byte[] data) throws IOException {
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-        DataInputStream dataStream = new DataInputStream(byteStream);
+    override fun read(data: ByteArray?): Collection<DatabaseRecord> {
+        val byteStream = ByteArrayInputStream(data)
+        val dataStream = DataInputStream(byteStream)
 
-        // Read number of documents
-        long id = dataStream.readLong();
-        String name = dataStream.readUTF();
+        // Read collection details
+        val id = dataStream.readLong()
+        val name = dataStream.readUTF()
 
-        int numDocuments = dataStream.readInt();
-        List<DatabaseRecord> documents = new ArrayList<>(numDocuments);
+        val numDocuments = dataStream.readInt()
+        val documents: MutableList<DatabaseRecord> = ArrayList<DatabaseRecord>(numDocuments)
 
         // Deserialize each document
-        for (int i = 0 ; i < numDocuments ; i++) {
-            int docSize = dataStream.readInt();
-            byte[] docBytes = new byte[docSize];
-            dataStream.readFully(docBytes);
-            Piece doc = readElement(docBytes);
-            documents.add(doc);
+        for (i in 0 until numDocuments) {
+            val docSize = dataStream.readInt()
+            val docBytes = ByteArray(docSize)
+            dataStream.readFully(docBytes)
+            val doc = readElement(docBytes)
+            documents.add(doc)
         }
 
-        return new PieceCollection(documents, id, name);
+        return PieceCollection(documents, id, name)
     }
 
     /**
-     * Read element piece.
+     * Read an element and return a Piece.
      *
-     * @param data the data
-     * @return the piece
-     * @throws IOException the io exception
+     * @param data the data as a byte array
+     * @return the deserialized Piece
+     * @throws IOException if an I/O error occurs
      */
-    public Piece readElement(byte[] data) throws IOException {
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-        DataInputStream dataStream = new DataInputStream(byteStream);
+    @Throws(IOException::class)
+    fun readElement(data: ByteArray): Piece {
+        val byteStream = ByteArrayInputStream(data)
+        val dataStream = DataInputStream(byteStream)
 
-        long documentId = dataStream.readLong();
-        int documentIndex = dataStream.readInt();
+        val documentId = dataStream.readLong()
+        val documentIndex = dataStream.readInt()
 
-        int size = dataStream.readInt();
-        Hashtable<String, Object> values = new Hashtable<>(size);
+        val size = dataStream.readInt()
+        val values = Hashtable<String, Any>(size)
 
-        for (int i = 0 ; i < size ; i++) {
-            String key = dataStream.readUTF();
+        for (i in 0 until size) {
+            val key = dataStream.readUTF()
 
-            byte typeId = dataStream.readByte();
-            Object value;
-            switch (typeId) {
-                case 1:
-                    value = dataStream.readUTF();
-                    break;
-                case 2:
-                    value = dataStream.readInt();
-                    break;
-                case 3:
-                    value = dataStream.readLong();
-                    break;
-                case 4:
-                    value = dataStream.readDouble();
-                    break;
-                case 5:
-                    value = dataStream.readBoolean();
-                    break;
-                case 6:
-                    value = UUID.fromString(dataStream.readUTF());
-                    break;
-                case 7:
-                    int objectSize = dataStream.readInt();
-                    byte[] objectBytes = new byte[objectSize];
-                    dataStream.readFully(objectBytes);
-                    ByteArrayInputStream objectStream = new ByteArrayInputStream(objectBytes);
-                    ObjectInputStream objInStream = new ObjectInputStream(objectStream);
-                    try {
-                        value = objInStream.readObject();
-                    } catch (ClassNotFoundException e) {
-                        throw new RuntimeException(e);
-                    }
-                    break;
-                default:
-                    throw new IOException("Unknown type identifier: " + typeId);
+            val typeId = dataStream.readByte()
+            val value: Any? = when (typeId.toInt()) {
+                1 -> dataStream.readUTF()
+                2 -> dataStream.readInt()
+                3 -> dataStream.readLong()
+                4 -> dataStream.readDouble()
+                5 -> dataStream.readBoolean()
+                6 -> UUID.fromString(dataStream.readUTF())
+                7 -> {
+                    val objectSize = dataStream.readInt()
+                    val objectBytes = ByteArray(objectSize)
+                    dataStream.readFully(objectBytes)
+                    val objectStream = ByteArrayInputStream(objectBytes)
+                    ObjectInputStream(objectStream).use { it.readObject() }
+                }
+                else -> throw IOException("Unknown type identifier: $typeId")
             }
-            values.put(key, value);
+            values[key] = value
         }
 
-        return new Piece(documentIndex, documentId, values);
+        return Piece(documentIndex, documentId, values)
     }
-
 }

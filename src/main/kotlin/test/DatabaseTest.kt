@@ -15,6 +15,8 @@ object DatabaseTest {
         val database: AbstractDatabase = DefaultDatabase(Paths.get("./database_test/"))
         database.load()
 
+        test1()
+
         println(database.getCollection("players")!!.collect())
     }
 
@@ -22,9 +24,9 @@ object DatabaseTest {
         val database: AbstractDatabase = DefaultDatabase(Paths.get("./database_test/"))
         database.load()
 
-        val collection: Collection<*>? = database.getCollection("players")
+        val collection: Collection<*> = database.getCollection("players")
 
-        collection!!.singlePieceAsync(
+        collection.singlePieceAsync(
             eq("name", "u64Lisa"),
             { piece: Piece?, state: AsyncCallBack.State?, exception: Exception? ->
                 when (state) {

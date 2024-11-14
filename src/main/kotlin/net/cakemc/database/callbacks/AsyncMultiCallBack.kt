@@ -49,15 +49,7 @@ interface AsyncMultiCallBack<T> {
      *
      * @param documents the documents
      */
-    fun acceptFound(documents: Cursor<T>?) {
-        if (documents == null) {
-            this.accept(
-                AsyncCallBack.State.ERROR,
-                documents,
-                IllegalArgumentException("piece is null but system tells its there!")
-            )
-            return
-        }
+    fun acceptFound(documents: Cursor<T>) {
 
         this.accept(AsyncCallBack.State.FOUND, documents, null)
     }

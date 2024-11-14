@@ -19,7 +19,7 @@ import java.util.concurrent.ThreadLocalRandom
  * The type Default database.
  */
 class DefaultDatabase(folder: Path) : AbstractDatabase() {
-    private val collectionMap: MutableMap<String?, Collection<DatabaseRecord?>> =
+    private val collectionMap: MutableMap<String, Collection<DatabaseRecord>> =
         ConcurrentHashMap()
 
     private val databaseFolder: AbstractDatabaseFolder = NioFolder(folder)
@@ -41,11 +41,11 @@ class DefaultDatabase(folder: Path) : AbstractDatabase() {
         }
     }
 
-    override fun getCollection(name: String?): Collection<DatabaseRecord?>? {
+    override fun getCollection(name: String): Collection<DatabaseRecord> {
         if (collectionMap.containsKey(name)) {
-            return collectionMap[name]
+            return collectionMap[name]!!
         }
-        val collection: Collection<DatabaseRecord?> = PieceCollection(ArrayList(), nextFreeId(), name)
+        val collection = PieceCollection(ArrayList(), nextFreeId(), name)
         collectionMap[collection.name] = collection
         return collection
     }
@@ -54,7 +54,7 @@ class DefaultDatabase(folder: Path) : AbstractDatabase() {
         val current = ThreadLocalRandom.current().nextLong()
 
         if (collectionMap.entries.stream()
-                .anyMatch { entry: Map.Entry<String?, Collection<DatabaseRecord?>> -> entry.value.id === current }
+            .anyMatch { entry: Map.Entry<String, Collection<DatabaseRecord>> -> entry.value.id === current }
         ) return nextFreeId()
 
         return current

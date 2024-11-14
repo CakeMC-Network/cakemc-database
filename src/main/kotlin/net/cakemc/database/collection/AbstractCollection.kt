@@ -23,13 +23,10 @@ abstract class AbstractCollection<T>
  * @param id       the id
  * @param name     the name
  */(
-    /**
-     * The Elements.
-     */
     @JvmField val elements: MutableList<T>, override val id: Long,
     override val name: String
-) :
-    Collection<T> {
+) : Collection<T> {
+
     override fun multiAsync(
         filter: Filter<T>,
         cursorSupplier: CursorSupplier<T, Cursor<T>>,

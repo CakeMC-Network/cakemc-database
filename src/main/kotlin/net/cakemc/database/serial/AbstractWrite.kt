@@ -18,5 +18,5 @@ abstract class AbstractWrite {
      * @throws IOException the io exception
      */
     @Throws(IOException::class)
-    abstract fun writeCollection(collection: Collection<DatabaseRecord?>, consumer: Consumer<Piece>): ByteArray
+    abstract fun writeCollection(collection: Collection<DatabaseRecord>, consumer: Consumer<Piece>): ByteArray
 }

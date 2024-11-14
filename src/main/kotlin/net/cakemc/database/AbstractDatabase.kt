@@ -20,7 +20,7 @@ abstract class AbstractDatabase {
      * @param name the name
      * @return the collection
      */
-    abstract fun getCollection(name: String?): Collection<DatabaseRecord?>?
+    abstract fun getCollection(name: String): Collection<DatabaseRecord>
 
     /**
      * Save.

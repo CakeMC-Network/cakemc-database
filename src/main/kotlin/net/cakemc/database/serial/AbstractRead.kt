@@ -16,5 +16,5 @@ abstract class AbstractRead {
      * @throws IOException the io exception
      */
     @Throws(IOException::class)
-    abstract fun read(data: ByteArray?): Collection<DatabaseRecord?>?
+    abstract fun read(data: ByteArray?): Collection<DatabaseRecord>
 }
