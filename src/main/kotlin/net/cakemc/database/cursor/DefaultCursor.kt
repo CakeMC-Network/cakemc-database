@@ -17,7 +17,7 @@ class DefaultCursor
      *
      * @return the pieces
      */
-    var pieces: List<Piece?>
+    var pieces: List<Piece>
 ) : Cursor<Piece?>() {
 
     override fun limit(number: Int): Cursor<Piece?> {
