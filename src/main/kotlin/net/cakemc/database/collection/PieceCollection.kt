@@ -91,14 +91,36 @@ class PieceCollection(
         }
     }
 
-    override fun updateOnePiece(filter: PieceFilter, element: Piece) {
-        // TODO: Implement field update based on filter
-    }
+    override fun updateOnePiece(filter: PieceFilter, other: Piece) {
+        val current = this.elements.stream().filter { filter.matches(it as Piece) }.findFirst()
+
+        if (current.isEmpty) {
+            this.insertOnePiece(other)
+            return
+        }
+
+        val piece: Piece = current.get() as Piece;
+
+        for (containing in other.elements) {
+            val key = containing.key;
+
+            if (piece.contains(key)) {
+                piece.remove(key)
+                piece.set(containing.key, containing.value)
+                continue
+            }
+
+            piece.set(containing.key, containing.value)
+        }
+
+        elements.removeIf { filter.matches(it as Piece) }
+        elements.add(piece)
+     }
 
     override fun updateOnePieceAsync(filter: PieceFilter, element: Piece, listener: DatabaseListener) {
         try {
             CompletableFuture.runAsync({
-                // TODO: Implement field update based on filter
+                updateOnePiece(filter, element)
             }, AbstractDatabase.EXECUTOR).get()
         } catch (exception: InterruptedException) {
             listener.exception(exception)
