@@ -71,4 +71,17 @@ object Filters {
             consumer.expect(value as T?)
         }
     }
+
+    /**
+     * And piece filter
+     *
+     * @param filters the filters
+     * @return the combined piece filter
+     */
+    @JvmStatic
+    fun and(vararg filters: PieceFilter): PieceFilter {
+        return PieceFilter { piece: Piece ->
+            filters.all { it.matches(piece) }
+        }
+    }
 }
