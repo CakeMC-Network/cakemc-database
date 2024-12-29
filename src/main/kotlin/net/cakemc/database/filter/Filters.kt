@@ -84,4 +84,17 @@ object Filters {
             filters.all { it.matches(piece) }
         }
     }
+
+    /**
+     * Or piece filter
+     *
+     * @param filters the filters
+     * @return the combined piece filter
+     */
+    @JvmStatic
+    fun or(vararg filters: PieceFilter): PieceFilter {
+        return PieceFilter { piece: Piece ->
+            filters.any { it.matches(piece) }
+        }
+    }
 }
